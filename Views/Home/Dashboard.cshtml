@@ -1,0 +1,80 @@
+@model WrapperModel
+@{
+    bool IsAttending(int userId, List<Association> attendants){
+        foreach (Association a in attendants){
+            if (a.PersonId == userId) {
+                return true;
+            }
+        }
+        return false;
+    };
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css">
+    <script src="main.js"></script>
+</head>
+<body>
+    <partial name="NavPartial" view-data="ViewData"/>
+    <div>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Activity</th>
+                    <th scope="col">Date and Time</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Event Coordinator</th>
+                    <th scope="col"># of Participants</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(Occasion OneOccasion in @Model.AllOccasions){
+                    var dateString = DateTime.Now.ToString("HH:mm");
+                    var eventString = @OneOccasion.Time.ToString("HH:mm");
+                    DateTime d1 = DateTime.Parse(dateString);
+                    DateTime d2 = DateTime.Parse(eventString);
+                    DateTime.Compare(d1, d2);
+                    if((@OneOccasion.Date.Date > DateTime.Now.Date) || ((@OneOccasion.Date.Date == DateTime.Now.Date) && (@OneOccasion.Time.Hour > DateTime.Now.Hour)) ||((@OneOccasion.Date.Date == DateTime.Now.Date) && (@OneOccasion.Time.Minute > DateTime.Now.Minute))){
+                        <tr>
+                            <td><a href="/activity/@OneOccasion.OccasionId">@OneOccasion.Title</a></td>
+                            <td>@OneOccasion.Date.ToString("dddd, MMMM dd, yyyy") at @OneOccasion.Time.ToString("hh:mm tt")</td>
+                            <td>@OneOccasion.DurationInt @OneOccasion.DurationString</td>
+                            <td>@OneOccasion.CoordinatorUser.FirstName @OneOccasion.CoordinatorUser.LastName</td>
+                            <td>@OneOccasion.Attendants.Count</td>
+                            @if(@Model.LoggedInUser.UserId == @OneOccasion.CoordinatorId){
+                                <td>
+                                    <form asp-action="CancelActivity" asp-route-activityId="@OneOccasion.OccasionId" method="post">
+                                        <button class="btn btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            } else {
+                                if (IsAttending(@Model.LoggedInUser.UserId, @OneOccasion.Attendants)){
+                                    <td>
+                                        <form asp-action="LeaveActivity" asp-route-UserId="@Model.LoggedInUser.UserId" asp-route-ThingId="@OneOccasion.OccasionId" method="post">
+                                            <button class="btn btn-primary">Leave</button>
+                                        </form>
+                                    </td>
+                                } else {
+                                    <td>
+                                        <form asp-action="JoinActivity" asp-route-UserId="@Model.LoggedInUser.UserId" asp-route-ThingId="@OneOccasion.OccasionId" method="post">
+                                            <button class="btn btn-primary">Join</button>
+                                        </form>
+                                    </td>
+                                }
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <a href="/add" class="btn btn-success">Add an Activity</a>
+</body>
+</html>

@@ -1,0 +1,60 @@
+@model WrapperModel
+@{
+    bool IsAttending(int userId, List<Association> attendants){
+        foreach (Association a in attendants){
+            if (a.PersonId == userId) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css">
+    <script src="main.js"></script>
+</head>
+<body>
+    <partial name="NavPartial" view-data="ViewData"/>
+    <div>
+        @if(@Model.LoggedInUser.UserId == @Model.ThisOccasion.CoordinatorId){
+            <td>
+                <form asp-action="CancelActivity" asp-route-activityId="@Model.ThisOccasion.OccasionId" method="post">
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+            </td>
+        } else {
+            if (IsAttending(@Model.LoggedInUser.UserId, @Model.ThisOccasion.Attendants)){
+                <td>
+                    <form asp-action="LeaveActivity" asp-route-UserId="@Model.LoggedInUser.UserId" asp-route-ThingId="@Model.ThisOccasion.OccasionId" method="post">
+                        <button class="btn btn-primary">Leave</button>
+                    </form>
+                </td>
+            } else {
+                <td>
+                    <form asp-action="JoinActivity" asp-route-UserId="@Model.LoggedInUser.UserId" asp-route-ThingId="@Model.ThisOccasion.OccasionId" method="post">
+                        <button class="btn btn-primary">Join</button>
+                    </form>
+                </td>
+            }
+        }
+    </div>
+    <div>
+        <h1>@Model.ThisOccasion.Title</h1>
+        <p>Event Coordinator: @Model.ThisOccasion.CoordinatorUser.FirstName @Model.ThisOccasion.CoordinatorUser.LastName</p>
+        <p>Description: @Model.ThisOccasion.Description</p>
+        <p>Participants:</p>
+        <ul>
+            @foreach(Association attendant in @Model.ThisOccasion.Attendants){
+                <li>@attendant.Person.FirstName</li>
+            }
+        </ul>
+    </div>
+</body>
+</html>
